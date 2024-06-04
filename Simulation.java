@@ -57,23 +57,27 @@ public class Simulation implements Runnable {
             thread.start();
         }
 
-        while (currentTime <= simulationMaxTime && !clients.isEmpty()) {
-            List<Client> arrivedClients = new ArrayList<>();
+        while (currentTime <= simulationMaxTime || !clients.isEmpty()) {
+            // Find the client with the earliest arrival time
+            Client nextClient = null;
             for (Client client : clients) {
                 if (client.getArrivalTime() <= currentTime) {
-                    arrivedClients.add(client);
+                    if (nextClient == null || client.getArrivalTime() < nextClient.getArrivalTime()) {
+                        nextClient = client;
+                    }
                 }
             }
-            clients.removeAll(arrivedClients);
 
-            for (Client client : arrivedClients) {
+            // If a client is found, add it to the queue with the shortest total service time
+            if (nextClient != null) {
                 ServiceQueue bestQueue = serviceQueues.get(0);
                 for (ServiceQueue queue : serviceQueues) {
                     if (queue.getTotalServiceTime() < bestQueue.getTotalServiceTime()) {
                         bestQueue = queue;
                     }
                 }
-                bestQueue.addClient(client);
+                bestQueue.addClient(nextClient);
+                clients.remove(nextClient);
             }
 
             logStatus(currentTime);
