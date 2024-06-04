@@ -47,18 +47,12 @@ public class Simulation implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         generateClients();
         initializeQueues();
-
-        // Initialize messages queue
         this.messages = new LinkedList<>();
-
-        // Initialize Timeline
         this.timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> updateLog()));
         this.timeline.setCycleCount(Timeline.INDEFINITE);
     }
-
     private void generateClients() {
         Random random = new Random();
         for (int i = 1; i <= numClients; i++) {
@@ -67,26 +61,21 @@ public class Simulation implements Runnable {
             clients.add(new Client(i, arrivalTime, serviceTime));
         }
     }
-
     private void initializeQueues() {
         for (int i = 1; i <= numQueues; i++) {
             serviceQueues.add(new ServiceQueue(i));
         }
     }
-
     @Override
     public void run() {
         int currentTime = 0;
-
         List<Thread> queueThreads = new ArrayList<>();
         for (ServiceQueue queue : serviceQueues) {
             Thread thread = new Thread(queue);
             queueThreads.add(thread);
             thread.start();
         }
-
         while (currentTime <= simulationMaxTime || !clients.isEmpty()) {
-            // Find the client with the earliest arrival time
             Client nextClient = null;
             for (Client client : clients) {
                 if (client.getArrivalTime() <= currentTime) {
@@ -96,7 +85,6 @@ public class Simulation implements Runnable {
                 }
             }
 
-            // If a client is found, add it to the queue with the shortest total service time
             if (nextClient != null) {
                 ServiceQueue bestQueue = serviceQueues.get(0);
                 for (ServiceQueue queue : serviceQueues) {
@@ -108,11 +96,10 @@ public class Simulation implements Runnable {
                 clients.remove(nextClient);
             }
 
-            // Write the log to the file
             updateMessages(currentTime);
 
             try {
-                Thread.sleep(1000); // Simulate each second
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -150,10 +137,9 @@ public class Simulation implements Runnable {
         String message = messageBuilder.toString();
         messages.add(message);
 
-        // Write message to simulation_log.txt
         try {
             writer.write(message);
-            writer.flush(); // Ensure the message is written immediately
+            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }

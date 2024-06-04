@@ -39,7 +39,7 @@ public class ServiceQueue implements Runnable {
                 }
             }
             try {
-                Thread.sleep(1000); // Simulate each second of processing
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
