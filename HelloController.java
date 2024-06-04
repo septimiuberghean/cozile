@@ -6,13 +6,15 @@ import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.control.Button;
 
 public class HelloController implements Initializable {
-
+    @FXML
+    public TextArea logTextArea;
     @FXML
     private TextField clientsTextField;
     @FXML
@@ -50,9 +52,12 @@ public class HelloController implements Initializable {
         int simulationMaxTime = Integer.parseInt(simulationTextField.getText());
 
         Simulation simulation = new Simulation(numClients, numQueues, simulationMaxTime,
-                minArrivalTime, maxArrivalTime, minServiceTime, maxServiceTime);
+                minArrivalTime, maxArrivalTime, minServiceTime, maxServiceTime, logTextArea);
 
         Thread simulationThread = new Thread(simulation);
         simulationThread.start();
+    }
+
+    public void sizeButtonOnAction(ActionEvent actionEvent) {
     }
 }

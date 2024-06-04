@@ -1,10 +1,18 @@
 package com.example.queueservice;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.scene.control.TextArea;
+import javafx.util.Duration;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 
 public class Simulation implements Runnable {
@@ -18,9 +26,12 @@ public class Simulation implements Runnable {
     private List<Client> clients;
     private List<ServiceQueue> serviceQueues;
     private BufferedWriter writer;
+    private TextArea logTextArea;
+    private Queue<String> messages;
+    private Timeline timeline;
 
     public Simulation(int numClients, int numQueues, int simulationMaxTime, int minArrivalTime,
-                      int maxArrivalTime, int minServiceTime, int maxServiceTime) {
+                      int maxArrivalTime, int minServiceTime, int maxServiceTime, TextArea logTextArea) {
         this.numClients = numClients;
         this.numQueues = numQueues;
         this.simulationMaxTime = simulationMaxTime;
@@ -30,6 +41,7 @@ public class Simulation implements Runnable {
         this.maxServiceTime = maxServiceTime;
         this.clients = new ArrayList<>();
         this.serviceQueues = new ArrayList<>();
+        this.logTextArea = logTextArea;
         try {
             this.writer = new BufferedWriter(new FileWriter("simulation_log.txt"));
         } catch (IOException e) {
@@ -38,6 +50,13 @@ public class Simulation implements Runnable {
 
         generateClients();
         initializeQueues();
+
+        // Initialize messages queue
+        this.messages = new LinkedList<>();
+
+        // Initialize Timeline
+        this.timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> updateLog()));
+        this.timeline.setCycleCount(Timeline.INDEFINITE);
     }
 
     private void generateClients() {
@@ -89,18 +108,8 @@ public class Simulation implements Runnable {
                 clients.remove(nextClient);
             }
 
-            try {
-                // Write the log to the file
-                writer.write("Time " + currentTime + "\n");
-                writer.write("Waiting clients: " + clients + "\n");
-                for (ServiceQueue queue : serviceQueues) {
-                    writer.write(queue.toString() + "\n");
-                }
-                writer.write("\n");
-                writer.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // Write the log to the file
+            updateMessages(currentTime);
 
             try {
                 Thread.sleep(1000); // Simulate each second
@@ -128,6 +137,28 @@ public class Simulation implements Runnable {
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void updateMessages(int currentTime) {
+        StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append("Time ").append(currentTime).append("\n");
+        messageBuilder.append("Waiting clients: ").append(clients).append("\n");
+        for (ServiceQueue queue : serviceQueues) {
+            messageBuilder.append(queue.toString()).append("\n");
+        }
+        messages.add(messageBuilder.toString());
+
+        if (!timeline.getStatus().equals(Timeline.Status.RUNNING)) {
+            timeline.play();
+        }
+    }
+
+    private void updateLog() {
+        if (!messages.isEmpty()) {
+            logTextArea.setText(messages.poll());
+        } else {
+            timeline.stop();
         }
     }
 }
