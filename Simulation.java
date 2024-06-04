@@ -147,12 +147,22 @@ public class Simulation implements Runnable {
         for (ServiceQueue queue : serviceQueues) {
             messageBuilder.append(queue.toString()).append("\n");
         }
-        messages.add(messageBuilder.toString());
+        String message = messageBuilder.toString();
+        messages.add(message);
+
+        // Write message to simulation_log.txt
+        try {
+            writer.write(message);
+            writer.flush(); // Ensure the message is written immediately
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (!timeline.getStatus().equals(Timeline.Status.RUNNING)) {
             timeline.play();
         }
     }
+
 
     private void updateLog() {
         if (!messages.isEmpty()) {
