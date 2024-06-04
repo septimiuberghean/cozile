@@ -1,5 +1,8 @@
 package com.example.queueservice;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -14,6 +17,7 @@ public class Simulation implements Runnable {
     private int maxServiceTime;
     private List<Client> clients;
     private List<ServiceQueue> serviceQueues;
+    private BufferedWriter writer;
 
     public Simulation(int numClients, int numQueues, int simulationMaxTime, int minArrivalTime,
                       int maxArrivalTime, int minServiceTime, int maxServiceTime) {
@@ -26,6 +30,11 @@ public class Simulation implements Runnable {
         this.maxServiceTime = maxServiceTime;
         this.clients = new ArrayList<>();
         this.serviceQueues = new ArrayList<>();
+        try {
+            this.writer = new BufferedWriter(new FileWriter("simulation_log.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         generateClients();
         initializeQueues();
@@ -80,7 +89,18 @@ public class Simulation implements Runnable {
                 clients.remove(nextClient);
             }
 
-            logStatus(currentTime);
+            try {
+                // Write the log to the file
+                writer.write("Time " + currentTime + "\n");
+                writer.write("Waiting clients: " + clients + "\n");
+                for (ServiceQueue queue : serviceQueues) {
+                    writer.write(queue.toString() + "\n");
+                }
+                writer.write("\n");
+                writer.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             try {
                 Thread.sleep(1000); // Simulate each second
@@ -103,19 +123,11 @@ public class Simulation implements Runnable {
             }
         }
 
-        logFinalStatus();
-    }
-
-    private void logStatus(int currentTime) {
-        System.out.println("Time " + currentTime);
-        System.out.println("Waiting clients: " + clients);
-        for (ServiceQueue queue : serviceQueues) {
-            System.out.println(queue);
+        try {
+            writer.write("Simulation finished.");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        System.out.println();
-    }
-
-    private void logFinalStatus() {
-        System.out.println("Simulation finished.");
     }
 }
